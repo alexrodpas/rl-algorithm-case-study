@@ -43,20 +43,22 @@ class Node():
         else:
             return self.get_value() + c * np.sqrt(np.log(parent_visits) / self.visits)
     
-    def selection(self):
+    def selection(self, c=1.4):
         # check if the node has unexplored actions
         if len(self.unexplored_actions) > 0:
             return self
         # if not, select the child with the highest UCT value
         else:
-            uct_values = [child.uct_value(self.visits) for child in self.children]
-            try:
-                max_child = self.children[np.argmax(uct_values)]
-            except ValueError as e:
-                print('Error: ', e)
+            # If the node has no children, return itself
+            if len(self.children) == 0:
+                return self
+            uct_values = [child.uct_value(self.visits, c) for child in self.children]
+            max_child = self.children[np.argmax(uct_values)]
             return max_child.selection()
         
     def expansion(self):
+        if len(self.unexplored_actions) == 0:
+            return self
         # Randomly choose an unexplored action
         expand_index = np.random.choice(len(self.unexplored_actions))
         expand_action = self.unexplored_actions[expand_index]
@@ -85,7 +87,7 @@ class Node():
         terminated = False
         total_reward = 0
         # Limit the rollout to k=4*size steps (as GridWorld is potentially infinite)
-        k = 4 * self.mcts.env.size
+        k = 2 * self.mcts.env.size
         for _ in range(k):
             # Random rollout policy
             action = np.random.choice(self.mcts.env.action_space.n)
@@ -157,12 +159,14 @@ class MCTS():
     """
     MCTS main class.
     """
-    def __init__(self, env, state, iter_budget=100, discount=0.9):
+    def __init__(self, env, state, render=True, iter_budget=100, discount=0.9, c=1.4):
         self.env = env
         self.action_list = self._get_action_list()
         self.root = Node(state=state, action=None, env=self.env, mcts=self, action_list=self.action_list)
         self.iter_budget = iter_budget
         self.discount = discount
+        self.render = render
+        self.c = c # exploration constant
     
     def best_action(self):
         """
@@ -200,7 +204,7 @@ class MCTS():
         # Reset environment to the initial state
         self.env = deepcopy(start_env)
         # Selection
-        selected_leaf = self.root.selection()
+        selected_leaf = self.root.selection(self.c)
         # Expansion
         expand_node = selected_leaf.expansion()
         # Simulation
@@ -228,17 +232,18 @@ class MCTS():
         return self
     
 
-def run_ttt_episode(env, obs, iter_budget=1000, print_depth=0):
+def run_ttt_episode(env, obs, iter_budget=1000, print_depth=0, render=True, c=1.4):
     """
     Runs one episode of TicTacToe with MCTS as the agent.
     """
-    print('Agent (player 1): O \nRandom opponent (player 2): X\n')
+    if render:
+        print('Agent (player 1): O \nRandom opponent (player 2): X\n')
     terminated = False
     total_reward = 0
     
     # Copy the env for MCTS simulations
     mcts_env = deepcopy(env)
-    mcts = MCTS(mcts_env, obs, iter_budget=iter_budget, discount=1)
+    mcts = MCTS(mcts_env, obs, render=render, iter_budget=iter_budget, discount=1, c=c)
 
     # Other option: 
     while not terminated:
@@ -246,18 +251,21 @@ def run_ttt_episode(env, obs, iter_budget=1000, print_depth=0):
         start_env = deepcopy(env)
         action = mcts.mcts_find_action(start_env=start_env, print_depth=print_depth)
         obs, reward, terminated, truncated, info = env.step(action)
-        print(f'Selected action: {action} Info: {info}')
+        if render:
+            print(f'Selected action: {action} Info: {info}')
         total_reward += reward
-        env.render()
+        if render:
+            env.render()
         if terminated:
-            print('Terminated')
+            print('Terminated', info)
             break
         
         # Opponent step
         action_opp = opponent_random(env, player=1)
         obs, _ , terminated, truncated, info = env.step(action_opp)
-        print(f'Opponent action: {action_opp} Info: {info}')
-        env.render()
+        if render:
+            print(f'Opponent action: {action_opp} Info: {info}')
+            env.render()
 
         if terminated:
             print('Terminated:', info)
@@ -268,7 +276,7 @@ def run_ttt_episode(env, obs, iter_budget=1000, print_depth=0):
     
     return total_reward
 
-def run_Gridworld_episode(env, obs, iter_budget=500, print_depth=0, ipynb=False):
+def run_Gridworld_episode(env, obs, iter_budget=500, print_depth=0, ipynb=False, render=True, c=1.4):
     """
     Runs one episode of GridWorld with MCTS as the agent.
     """
@@ -277,18 +285,20 @@ def run_Gridworld_episode(env, obs, iter_budget=500, print_depth=0, ipynb=False)
     
     # Copy the env for MCTS simulations
     mcts_env = deepcopy(env)
-    mcts = MCTS(mcts_env, obs, iter_budget=iter_budget, discount=0.9)
+    mcts = MCTS(mcts_env, obs, iter_budget=iter_budget, discount=0.9, c=c)
 
     # Limit number of steps to k=2*size as GridWorld is potentially infinite
     k = 2 * env.size
     for i in range(k):
         start_env = deepcopy(env)
         action = mcts.mcts_find_action(start_env=start_env, print_depth=print_depth)
-        print(f'Selected action: {action_arrow(action)}')
+        if render:
+            print(f'Selected action: {action_arrow(action)}')
         obs, reward, terminated, truncated, info = env.step(action)
         total_reward += reward
-        print(f'Obs: {obs}')
-        render_rgb(env.render(), ipynb=ipynb)
+        if render:
+            print(f'Obs: {obs}')
+            render_rgb(env.render(), ipynb=ipynb)
         if terminated:
             print('Terminated')
             return total_reward
