@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import gym_examples
 from mcts import run_ttt_episode, run_Gridworld_episode
 import numpy as np
