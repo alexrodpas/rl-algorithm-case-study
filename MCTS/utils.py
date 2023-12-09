@@ -2,9 +2,12 @@ from PIL import Image
 import numpy as np
 from IPython.display import display
 
-def render_rgb(rgb_array):
+def render_rgb(rgb_array, ipynb=False):
     # Render the RGB array returned by the env as an image
-    display(Image.fromarray(rgb_array).resize((150,150)))
+    if ipynb:
+        display(Image.fromarray(rgb_array).resize((150,150)))
+    else:
+        Image.fromarray(rgb_array).resize((450,450)).show()
 
 def action_arrow(action):
     # Mapping the GridWorld actions to arrows
