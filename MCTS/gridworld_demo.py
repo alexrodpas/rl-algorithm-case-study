@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import gym_examples
 from mcts import run_Gridworld_episode
 from utils import render_rgb

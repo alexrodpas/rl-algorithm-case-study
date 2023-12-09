@@ -1,5 +1,5 @@
 import numpy as np
-import gym
+import gymnasium as gym
 import itertools
 from copy import deepcopy
 from utils import action_arrow, opponent_random, render_rgb

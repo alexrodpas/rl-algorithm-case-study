@@ -4,7 +4,7 @@
 -`gym_examples/envs`:  
 ---`grid_world.py`: Gridworld Env from [GitHub Repo gym-examples](https://github.com/Farama-Foundation/gym-examples)  
 ---`tictactoe_env.py`: TicTacToe Env from [GitHub Repo gym-tic-tac-toe](https://github.com/LudwigStumpp/gym-tic-tac-toe)  
--`mcts.ipynb`: Monte Carlo Tree Search Algorithm (own implementation)
+-`MCTS/`: Monte Carlo Tree Search Algorithm (own implementation)
 
 ## Installation
 ```shell
