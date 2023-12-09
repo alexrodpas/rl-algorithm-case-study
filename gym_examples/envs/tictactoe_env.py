@@ -1,6 +1,6 @@
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium import error, spaces, utils
+from gymnasium.utils import seeding
 from .helpers import *
 
 
@@ -46,6 +46,12 @@ class TictactoeEnv(gym.Env):
         self.reward_win = reward_win
         self.reward_violation = reward_violation
         self.reward_drawn = reward_drawn
+
+    def get_state_space_size(self):
+        return self.observation_space.n
+    
+    def get_action_space_size(self):
+        return self.action_space.nvec[1]
 
     def step(self, action):
         """
