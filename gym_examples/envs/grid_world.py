@@ -1,5 +1,5 @@
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import pygame
 import numpy as np
 
@@ -47,6 +47,12 @@ class GridWorldEnv(gym.Env):
         """
         self.window = None
         self.clock = None
+
+    def get_state_space_size(self):
+        return (self.size, self.size)
+    
+    def get_action_space_size(self):
+        return self.action_space.n
 
     def _get_obs(self):
         return {"agent": self._agent_location, "target": self._target_location}
